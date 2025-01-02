@@ -1,0 +1,157 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(flexdashboard)
+library(ggplot2)
+library(magrittr)
+library(DescTools)
+library(stringr)
+```
+
+```{r}
+rm(list = ls())
+location='https://github.com/DACSS-Visual/tabular_univar_cat/raw/main/data/'
+file='eduwa.rda'
+link=paste0(location,file)
+load(file=url(link))
+```
+
+```{r}
+head(eduwa)
+table(eduwa$LocaleType)
+names(eduwa)
+
+head(eduwa$LocaleSub,20)
+
+absoluteT=table(eduwa$LocaleSub,
+                exclude = 'nothing')
+names(absoluteT)[13]='Unknown'
+absoluteT
+prop.table(absoluteT)
+```
+
+```{r}
+ruralEduwa=eduwa[eduwa$LocaleType=='Rural',]
+ruralEduwa$LocaleSub=droplevels(ruralEduwa$LocaleSub)
+table(ruralEduwa$LocaleSub)
+```
+
+### Student Teacher Ratio
+
+```{r}
+length(unique(eduwa$Student.Teacher.Ratio))
+ratioDF=as.data.frame(table(eduwa$Student.Teacher.Ratio))
+names(ratioDF)=c("Student.Teacher.Ratio","Count")
+head(ratioDF)
+```
+
+```{r}
+base = ggplot(data=ratioDF, aes(x=Student.Teacher.Ratio,Count))
+bar1_bad=base+geom_bar(stat = "identity")
+bar1_bad
+```
+
+```{r}
+summary(eduwa$Student.Teacher.Ratio)
+statVals=summary(eduwa$Student.Teacher.Ratio,digits = 3)[1:6]
+```
+
+```{r}
+statVals=statVals |> as.vector()
+base= ggplot(eduwa,aes(y = Student.Teacher.Ratio))  #var to plot in 'y' 
+base = base + 
+  geom_boxplot() + 
+  coord_flip() +
+  scale_y_continuous(breaks = statVals)
+base
+```
+
+```{r}
+(upperT=ggplot_build(base)$data[[1]]$ymax)
+(numOutliers=sum(eduwa$Student.Teacher.Ratio>upperT,na.rm = T))
+```
+
+```{r}
+txtOutliers=paste0('#Outlying schools: ',numOutliers)
+txtUpper=paste0('Threshold:',upperT)
+
+base2 = base +
+  geom_hline(yintercept = upperT, color='red', linetype="dotted", size=1) +
+  annotate(geom='text', label=txtUpper, y=upperT+5, x=0.2, angle=90) +
+  annotate(geom='text', label=txtOutliers, y=upperT+100, x=0.1, angle=0) +
+  theme(axis.text.y=element_blank(), 
+        axis.ticks.y=element_blank(), 
+        axis.title.y=element_blank(),
+        panel.grid = element_blank())
+base2
+```
+
+In this situation, the median is more relevant than the mean due to the existence of outliars and a right-tail skew.
+
+```{r}
+cv=CoefVar(eduwa$Student.Teacher.Ratio,na.rm = T)
+sd=SD(eduwa$Student.Teacher.Ratio,na.rm = T)
+md=Median(eduwa$Student.Teacher.Ratio,na.rm = T)
+mn=Mean(eduwa$Student.Teacher.Ratio,na.rm = T)
+mn.low=MeanCI(eduwa$Student.Teacher.Ratio,
+     na.rm = T)[['lwr.ci']]
+mn.up=MeanCI(eduwa$Student.Teacher.Ratio,
+     na.rm = T)[['upr.ci']]
+sk=Skew(eduwa$Student.Teacher.Ratio,
+     na.rm = T)
+```
+
+```{r}
+txtMedian=paste0('Median:',round(md))
+txtSkew=paste0('Skeness:',round(sk,2))
+
+base= ggplot(eduwa)  
+h1= base + geom_histogram(aes(x = Student.Teacher.Ratio),
+                          binwidth = 10,
+                          fill='black') 
+h1=h1 + labs(y="count") +
+  geom_vline(xintercept = mn,color='red',linetype='dotted') + 
+  annotate(geom='text', color='red',label=txtMedian,y=550,x=mn-10,angle=90) +
+  annotate(geom='text',color='blue',label=txtSkew,y=50,x=upperT+170, angle=0)
+h1
+```
+
+```{r}
+caption_text <- "Data source: nces.ed.gov: The Common Core of Data from the US Department of Education. The visualization above represents the distribution of student-teacher ratios across public schools in the state of Washington using a combination of violin and boxplot charts. Outliers are highlighted in red to draw attention to extreme values."
+wrapped_caption <- str_wrap(caption_text, width = 90)
+
+vio <- ggplot(eduwa, aes(x = 0, y = Student.Teacher.Ratio)) +
+  geom_violin(trim = FALSE, fill = 'grey', color = 'black') +
+  theme_classic() +
+  coord_flip()
+
+viobox <- vio + 
+  geom_boxplot(width = 0.1, outlier.color = 'red', colour = 'white', fill = 'black') +
+  theme(
+    axis.text.y = element_blank(), 
+    axis.ticks.y = element_blank(), 
+    axis.title.y = element_blank(),
+    plot.caption = element_text(size = 10, hjust = 0, vjust = 1, lineheight = 1.2),
+    plot.margin = margin(10, 10, 40, 10)
+  ) + 
+  annotate(
+    geom = 'text',
+    label = txtOutliers,
+    y = upperT + 60,
+    x = 0.1,
+    color = 'red',
+    angle = 0
+  ) + 
+  labs(
+    title = "Distribution of Washington Public Schools' Student-Teacher Ratios",
+    subtitle = "Violin and boxplot representation with annotated outliers",
+    caption = wrapped_caption)
+
+options(repr.plot.width = 10, repr.plot.height = 6)
+saveRDS(viobox, "viobox_plot.rds")
+
+viobox
+```
