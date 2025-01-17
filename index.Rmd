@@ -21,10 +21,10 @@ Preparing the dashboard based on the instructions given at @magallanes_reyes_dat
 readRDS("viobox_plot.rds")
 ```
 
-### Worst histogram
+### Deliverable 2
 
 ```{r}
-readRDS("del2Draft.rds")
+readRDS("ArrestRace.rds")
 ```
 
 ### Worst scatterplot

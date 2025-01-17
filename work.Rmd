@@ -3,12 +3,20 @@ title: "R Notebook"
 output: html_notebook
 ---
 
+# Libraries
+
 ```{r}
 library(flexdashboard)
 library(ggplot2)
 library(magrittr)
 library(DescTools)
 library(stringr)
+library(dplyr)
+library(tidyverse)
+library(readxl)
+library(rio)
+library(scales)
+library(magrittr)
 ```
 
 ```{r}
@@ -39,7 +47,7 @@ ruralEduwa$LocaleSub=droplevels(ruralEduwa$LocaleSub)
 table(ruralEduwa$LocaleSub)
 ```
 
-### Student Teacher Ratio
+### Student Teacher Ratio - Deliverable 1
 
 ```{r}
 length(unique(eduwa$Student.Teacher.Ratio))
@@ -155,3 +163,292 @@ saveRDS(viobox, "viobox_plot.rds")
 
 viobox
 ```
+
+```{r}
+length(unique(eduwa$County))
+names(eduwa)
+length(names(eduwa))
+```
+
+```{r}
+length(unique(eduwa$District))
+length(unique(eduwa$County))
+```
+
+```{r}
+counties <- eduwa %>%
+  group_by(County = eduwa$County) |>
+  summarize(Average_Ratio = mean(Student.Teacher.Ratio, na.rm = TRUE)) |>
+  arrange(desc(Average_Ratio))
+
+ggplot(counties, aes(x = reorder(County, Average_Ratio), y = Average_Ratio)) +
+  geom_col(fill = "skyblue", color = "black") + 
+  coord_flip() +  
+  labs(
+    title = "Average Student-Teacher Ratio by County",
+    x = "County",
+    y = "Average Student-Teacher Ratio"
+  ) +
+  theme_minimal(base_size = 12)
+```
+
+```{r}
+incomes <- read_excel("incomes_real.xlsx")
+head(incomes)
+```
+
+```{r}
+counties_income <- counties |>
+  left_join(incomes, by = c("County" = "county"))
+
+ggplot(counties_income, aes(x = value, y = Average_Ratio)) +
+  geom_point(color = "blue", size = 3, alpha = 0.7) +
+  geom_smooth(method = "lm", color = "red") +
+  labs(
+    title = "Income and Student-Teacher Ratio",
+    x = "average household Income",
+    y = "Student-Teacher Ratio",
+  ) +
+  scale_x_continuous(labels = label_number(big.mark = ",")) +
+  theme_minimal(base_size = 12)
+
+```
+
+## Deliverable 2
+
+```{r}
+rm(list = ls())
+link="https://github.com/DACSS-Visual/tabular_bivar_catcat/raw/main/data/crime.RData"
+load(file = url(link))
+```
+
+```{r}
+names(crime)
+```
+
+```{r}
+(PrecintDaytime=table(crime$Precinc,crime$Occurred.DayTime))
+(PrecDayti_mgCol=prop.table(PrecintDaytime,
+                            margin = 2)%>%round(.,3))
+```
+
+```{r}
+PrecDaytiDF=as.data.frame(PrecintDaytime)
+names(PrecDaytiDF)=c("precint","daytime","counts")
+PrecDaytiDF$pctCol=100*as.data.frame(PrecDayti_mgCol)[,3]
+PrecDaytiDF
+```
+
+```{r}
+ggplot(data=PrecDaytiDF, 
+             aes(x=daytime, y=counts)) + geom_bar(stat="identity")
+```
+
+```{r}
+base1 = ggplot(data=PrecDaytiDF,
+               aes(x=daytime, y=counts,
+                   fill=reorder(precint,pctCol)))
+
+barDodge1 = base1 + geom_bar(stat="identity", position = "dodge")
+barDodge1
+```
+
+```{r}
+barStacked_counts = base1 + geom_bar(stat = "identity",
+                              position = 'stack')
+barStacked_counts
+```
+
+```{r}
+base1_pct=ggplot(data=PrecDaytiDF,
+             aes(x=daytime, y=pctCol,
+                 fill=precint)) 
+barStacked_pcts = base1_pct + geom_bar(stat = "identity",
+                              position = 'stack')
+barStacked_pcts
+```
+
+```{r}
+barStacked_pcts= barStacked_pcts + geom_text(size = 5,
+                             position = position_stack(vjust = 0.5),
+                             aes(label=pctCol))
+
+barStacked_pcts
+```
+
+Reorder
+
+```{r}
+base3=ggplot(data=PrecDaytiDF, 
+             aes(x=daytime, y=pctCol,
+                 fill=reorder(precint,pctCol)))
+
+barStacked_pcts_reordered = base3 + geom_bar(stat = "identity",
+                              position = 'stack')
+barStacked_pcts_reordered= barStacked_pcts_reordered + geom_text(size = 5,
+                             position = position_stack(vjust = 0.5),
+                             aes(label=paste0(pctCol,'%')))
+
+barStacked_pcts_reordered=barStacked_pcts_reordered + scale_fill_brewer(palette = 'Set1')
+barStacked_pcts_reordered
+```
+
+```{r}
+(CrimeDay=table(crime$crimecat,crime$Occurred.DayTime))
+```
+
+```{r}
+CrimeDayDF=as.data.frame(CrimeDay)
+names(CrimeDayDF)=c("crime", "daytime", "frequency")
+
+#adding marginal
+CrimeDay_mgCol=100*prop.table(CrimeDay,margin = 2)
+CrimeDayDF$pctCol=round(as.data.frame(CrimeDay_mgCol)[,3],1)
+
+head(CrimeDayDF,20)
+```
+
+```{r}
+ggplot(data=CrimeDayDF,
+             aes(x=daytime,y=pctCol,fill=crime)) + 
+    geom_bar(stat = "identity", position = 'fill') 
+```
+
+```{r}
+base4 = ggplot(CrimeDayDF, aes(x = crime, y = pctCol)) +
+  geom_bar( stat = "identity" ) + theme_minimal() +
+  facet_grid(~ daytime)
+base4
+```
+
+```{r}
+(barsFacet = base4 + facet_grid(~ daytime) + coord_flip())
+
+```
+
+```{r}
+barsFacet2 = ggplot(CrimeDayDF,
+                aes(x = reorder(crime, pctCol), y = pctCol)) +
+  theme_minimal() +
+  geom_bar(stat='identity') + 
+  coord_flip() + 
+  facet_grid(~daytime) +
+  theme(axis.text.y = element_text(size=7,angle = 20)) + 
+  geom_text(aes(label=ifelse(pctCol>5, pctCol, "")), nudge_y = 4, size=2.5)
+barsFacet2
+```
+
+```{r}
+baseHeat  = ggplot(CrimeDayDF, aes(x = daytime, 
+                               y = reorder(crime, pctCol), 
+                               fill = pctCol*100)) + theme_classic()
+heatDefault = baseHeat +  geom_tile()
+
+heatDefault
+```
+
+### Arrest Offence by Race
+
+Use the columns **Arrest Offense by UCR Code** and **Race** to make a visual. The excel file has the data in the first sheet; the second one has the *Arrest codes* (40 codes) and *Race codes* (8 codes).
+
+```{r}
+linkMass="https://github.com/DACSS-Visual/tabular_bivar_catcat/raw/refs/heads/main/data/MSP%20DFS%20Arrests%2019-20Q1.xlsx"
+arrests=rio::import(linkMass,which = 1)
+head(arrests)
+names(arrests)
+```
+
+```{r}
+names(arrests)
+
+(ArrestRace=table(arrests$`Arrest Offense by UCR Code`,arrests$Race))
+(ArrestRace_mgCol=prop.table(ArrestRace,
+                            margin = 2)%>%round(.,3))
+```
+
+```{r}
+ArrestRaceDF=as.data.frame(ArrestRace)
+names(ArrestRaceDF)=c("Arrest Code","Race","Counts")
+ArrestRaceDF$mgCol=100*as.data.frame(ArrestRace_mgCol)[,3]
+head(ArrestRaceDF)
+```
+
+```{r}
+base5 = ggplot(ArrestRaceDF, aes(x = `Arrest Code`, y = mgCol)) +
+  geom_bar( stat = "identity" ) + theme_minimal() +
+  facet_grid(~ Race)
+base5
+
+(barsFacet = base5 + coord_flip())
+```
+
+```{r}
+ArrestRace2 = ggplot(ArrestRaceDF,
+                aes(x = reorder(`Arrest Code`, mgCol), y = mgCol)) +
+  theme_minimal() +
+  geom_bar(stat='identity') + 
+  coord_flip() + 
+  facet_grid(~Race) +
+  theme(axis.text.y = element_text(size=5.5,angle = 20)) + 
+  geom_text(aes(label=ifelse(mgCol>5, mgCol, "")), nudge_y = 4, size=2.5)
+ArrestRace2
+```
+
+```{r}
+ArrestCodesKeys <- read_excel("ArrestCodesKeys.xlsx")
+RaceKeys <- read_excel("RaceKeys.xlsx")
+```
+
+```{r}
+#head(ArrestCodesKeys)  # Should have columns like Code and Description
+#head(RaceKeys)         # Should have columns like RaceCode and RaceDescription
+
+colnames(ArrestCodesKeys) <- c("ArrestCode", "ArrestDescription")
+colnames(RaceKeys) <- c("RaceCode", "RaceDescription")
+
+# Join with ArrestCodesKeys to replace Arrest Code with description
+ArrestRaceDF <- ArrestRaceDF |>
+  left_join(ArrestCodesKeys, by = c("Arrest Code" = "ArrestCode"))
+
+# Join with RaceKeys to replace Race with description
+ArrestRaceDF <- ArrestRaceDF |>
+  left_join(RaceKeys, by = c("Race" = "RaceCode"))
+
+# Drop old columns if necessary
+ArrestRaceDF <- ArrestRaceDF |>
+  select(ArrestDescription, RaceDescription, Counts, mgCol)
+
+# Rename columns for clarity
+colnames(ArrestRaceDF) <- c("Arrest Code", "Race", "Counts", "Percentage")
+
+ArrestRaceDF
+```
+
+```{r}
+ArrestRace2 <- ggplot(ArrestRaceDF,
+                      aes(x = reorder(`Arrest Code`, Percentage), y = Percentage)) +
+  theme_minimal() +
+  geom_bar(stat = 'identity', fill = "steelblue") +
+  coord_flip() +
+  facet_grid(~Race) +
+  theme(
+    axis.text.y = element_text(size = 6),
+    axis.text.x = element_text(size = 8),
+    axis.title.x = element_text(size = 10),
+    axis.title.y = element_text(size = 10),
+    strip.text = element_text(size = 8, face = "bold")
+  ) +
+  geom_text(aes(label = ifelse(Percentage > 5, round(Percentage, 1), "")), 
+            nudge_y = 4, size = 3, color = "black") +
+  labs(
+    title = "Percentage of Arrests by Race and Offense",
+    x = "Arrest Code (Description)",
+    y = "Percentage of Total Arrests",
+    caption = "Data sources: Arrest Data"
+  )
+
+ArrestRace2
+
+```
+
+\
