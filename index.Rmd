@@ -27,16 +27,10 @@ readRDS("viobox_plot.rds")
 readRDS("ArrestRace.rds")
 ```
 
-### Worst scatterplot
+### Deliverable 3
 
 ```{r}
-readRDS("del3Draft.rds")
-```
-
-### Worst map
-
-```{r}
-readRDS("del4Draft.rds")
+readRDS("boston_contributions.rds")
 ```
 
 ### References

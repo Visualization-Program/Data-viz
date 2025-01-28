@@ -1,0 +1,74 @@
+{
+    "sources": [
+        {
+            "author": [
+                {
+                    "family": "Aden-Buie",
+                    "given": "Garrick"
+                },
+                {
+                    "family": "Sievert",
+                    "given": "Carson"
+                },
+                {
+                    "family": "Iannone",
+                    "given": "Richard"
+                },
+                {
+                    "family": "Allaire",
+                    "given": "JJ"
+                },
+                {
+                    "family": "Borges",
+                    "given": "Barbara"
+                }
+            ],
+            "genre": "Manual",
+            "id": "aden-buie_flexdashboard_2024",
+            "issued": {
+                "date-parts": [
+                    [
+                        2024
+                    ]
+                ]
+            },
+            "title": "Flexdashboard: R markdown format for flexible dashboards",
+            "title-short": "Flexdashboard",
+            "type": "book"
+        },
+        {
+            "DOI": "10.1017/9781108625425",
+            "ISBN": "978-1-108-62542-5 978-1-108-49433-5 978-1-108-71438-9",
+            "accessed": {
+                "date-parts": [
+                    [
+                        2024,
+                        12,
+                        25
+                    ]
+                ]
+            },
+            "author": [
+                {
+                    "family": "Magallanes Reyes",
+                    "given": "Jose Manuel"
+                }
+            ],
+            "edition": "1",
+            "id": "magallanes_reyes_data_2022",
+            "issued": {
+                "date-parts": [
+                    [
+                        2022,
+                        3
+                    ]
+                ]
+            },
+            "publisher": "Cambridge University Press",
+            "title": "Data Visualization for Social and Policy Research: A Step-by-Step Approach Using R and Python",
+            "title-short": "Data Visualization for Social and Policy Research",
+            "type": "book"
+        }
+    ],
+    "project_biblios": []
+}

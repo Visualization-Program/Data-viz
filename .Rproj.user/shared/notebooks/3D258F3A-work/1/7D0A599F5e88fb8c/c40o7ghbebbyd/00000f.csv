@@ -1,0 +1,5 @@
+"0","linkData='https://github.com/DACSS-Visual/SpatialData/raw/main/data/contriWA.RData'"
+"0","load(url(linkData))"
+"0",""
+"0","# THIS IS NOT A MAP"
+"0","head(contriWA)"

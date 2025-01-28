@@ -1,0 +1,24 @@
+"0","rm(list = ls()) # start fresh"
+"0",""
+"0","library(sf) "
+"2","Warning: package ‘sf’ was built under R version 4.3.3"
+"2","Linking to GEOS 3.11.2, GDAL 3.8.2, PROJ 9.3.1; sf_use_s2() is TRUE
+"
+"0","link=""https://github.com/DACSS-Visual/SpatialData/raw/main/maps/wazipMap.gpkg"""
+"0","zipMap=sf::read_sf(link, layer='zips')"
+"0",""
+"0","# see some rows"
+"0","head(zipMap)"
+"1","Simple feature collection with 6 features and 8 fields"
+"1","
+"
+"1","Geometry type: MULTIPOLYGON
+"
+"1","Dimension:     XY
+"
+"1","Bounding box:  "
+"1","xmin: -122.3449 ymin: 47.25706 xmax: -122.0991 ymax: 47.6608"
+"1","
+"
+"1","Geodetic CRS:  WGS 84
+"

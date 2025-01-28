@@ -17,6 +17,8 @@ library(readxl)
 library(rio)
 library(scales)
 library(magrittr)
+library(units)
+library(sf)
 ```
 
 ```{r}
@@ -451,4 +453,352 @@ ArrestRace2
 
 ```
 
-\
+## Deliverable 3
+
+```{r}
+rm(list = ls()) # start fresh
+
+library(sf) 
+link="https://github.com/DACSS-Visual/SpatialData/raw/main/maps/wazipMap.gpkg"
+zipMap=sf::read_sf(link, layer='zips')
+
+# see some rows
+head(zipMap)
+names(zipMap)
+```
+
+```{r}
+base=ggplot(data = zipMap) # map to use
+base + geom_sf(fill='black') # plot the geometry
+```
+
+```{r}
+base=ggplot(data = zipMap)
+base + geom_sf(aes(fill=POP2005), #variable for coloring geometry
+               color=NA) + # no borders
+    scale_fill_viridis_c(direction = 1) # color map
+```
+
+```{r}
+zipMap$area_km2=drop_units(set_units(st_area(st_make_valid(zipMap)),'km2'))
+zipMap$POP2005_density=zipMap$POP2005/zipMap$area_km2
+```
+
+```{r}
+base=ggplot(data = zipMap)
+choroPop=base + geom_sf(aes(fill=POP2005_density),color=NA) + 
+  scale_fill_viridis_c(direction = -1)
+choroPop
+```
+
+```{r}
+base + geom_sf(aes(fill=POP2015-POP2005),color=NA) + 
+     scale_fill_viridis_c(direction = -1, option = 'B')
+```
+
+```{r}
+linkData='https://github.com/DACSS-Visual/SpatialData/raw/main/data/contriWA.RData'
+load(url(linkData))
+
+# THIS IS NOT A MAP
+head(contriWA)
+```
+
+```{r}
+str(contriWA,width = 60, strict.width = 'cut')
+```
+
+```{r}
+contriWA$contributor_zip=as.character(contriWA$contributor_zip)
+table(contriWA$election_year,contriWA$party)
+```
+
+```{r}
+contriWA_1216_RD=contriWA[contriWA$election_year%in% c(2012,2016) & contriWA$party%in% c('DEMOCRAT','REPUBLICAN'),]
+table(contriWA_1216_RD$election_year,contriWA_1216_RD$party)
+```
+
+```{r}
+contriWA_1216_RD$party=droplevels(contriWA_1216_RD$party)
+table(contriWA_1216_RD$election_year,contriWA_1216_RD$party)
+```
+
+aggregation process (adding zip to republican democrat)
+
+```{r}
+# using columns 'amount'
+# 'counts':how many contributors
+# 'amountPerCap': mean contribution
+
+# all grouped  by zip, year and party
+
+contribsWA_agg= contriWA_1216_RD %>%
+                    group_by(contributor_zip, election_year, party) %>%
+                        summarise_at(vars(amount),
+                                     list(counts=length,
+                                          amountPerCap=mean))
+head(contribsWA_agg)
+```
+
+```{r}
+contribsWA_agg |>
+  group_by(contributor_zip, election_year) |>
+  mutate(percentage = counts / sum(counts) * 100) -> contribsWA_agg
+
+contribsWA_agg$counts=NULL
+```
+
+```{r}
+contrib_zipMap=merge(zipMap,contribsWA_agg,
+                     by.x='ZCTA5CE10',  
+                     by.y='contributor_zip')
+```
+
+```{r}
+base=ggplot() + theme_void() 
+base + geom_sf(data=contrib_zipMap,
+               aes(fill=amountPerCap)) + 
+       scale_fill_viridis_c(direction = -1,
+                            na.value = 'red') + # missing in red?
+       facet_grid(party~election_year) +
+       labs(fill='Contribution PerCap \n (red:no information)')  
+```
+
+```{r}
+wa_simple=read_sf('https://github.com/DACSS-Visual/SpatialData/raw/refs/heads/main/maps/WA_State_Boundary.geojson')
+
+#then
+base=ggplot(wa_simple) + geom_sf(fill='white')+theme_void() # the new map
+base + geom_sf(data=contrib_zipMap,
+               aes(fill=amountPerCap),color=NA) + # no border
+       scale_fill_viridis_c(direction = -1) +
+       facet_grid(party~election_year) +
+       labs(fill='Contribution PerCap \n (white:no information)') 
+```
+
+```{r}
+base + geom_sf(data=contrib_zipMap,
+               aes(fill=percentage),color=NA) + 
+                scale_fill_viridis_c(direction = -1) +
+                    facet_grid(party~election_year) +
+                        labs(fill='Involvement (%) \n (white:no information)') +
+              theme(legend.title = element_text(size=8,
+                                                hjust = 0.5),#center
+                    legend.position = "bottom",
+                    legend.key.width = unit(1, "cm")) + # value to modify
+    guides(fill = guide_colourbar(title.position="top"))
+```
+
+Discretizing
+
+```{r}
+do.call(data.frame,aggregate(data=contrib_zipMap,
+                             amountPerCap~election_year +party,fivenum))
+```
+
+```{r}
+ggplot(contrib_zipMap)+ aes(x=amountPerCap) + geom_density() + facet_wrap(~election_year +party,ncol = 1) + scale_x_log10()
+```
+
+```{r}
+customCuts=c(0,10,100,1000,10000)
+
+contrib_zipMap$amount_perCap_cat=cut(contrib_zipMap$amountPerCap,
+                                          breaks=customCuts,include.lowest = F,
+                                          dig.lab = 5)
+
+table(contrib_zipMap$amount_perCap_cat,contrib_zipMap$election_year,contrib_zipMap$party)
+```
+
+```{r}
+theLabelsForLevels=c("upTo_10",">10_to100", ">100_to1000", 'MoreThan_1000')
+
+#the new var:
+contrib_zipMap$amount_perCap_catLabel=contrib_zipMap$amount_perCap_cat
+
+# as they are factor, we can change level labels
+levels(contrib_zipMap$amount_perCap_catLabel)=theLabelsForLevels
+
+# see some
+head(contrib_zipMap$amount_perCap_catLabel,10)
+```
+
+```{r}
+base + geom_sf(data=contrib_zipMap,
+               aes(fill=amount_perCap_cat),color=NA) + 
+               labs(fill="US$ PerCapita \nAreas with NO Info in white",
+                    title='Contributions to Republicans and Democrats: Not much difference',
+                    subtitle='WA State zip boundaries, contribution in 2012 & 2016')+
+                    scale_fill_brewer(palette = "YlOrRd") +
+                        facet_grid(party~election_year) 
+```
+
+### Tender Type Comparison
+
+```{r}
+linkZips='https://raw.githubusercontent.com/DACSS-Visual/SpatialData/refs/heads/main/data/zip_codes.json'
+bostonZips=sf::read_sf(linkZips)
+head(bostonZips)
+plot(bostonZips)
+```
+
+Aggregation
+
+```{r}
+linkBoston="https://github.com/DACSS-Visual/SpatialData/raw/refs/heads/main/data/BostonContrib.xlsx"
+bostonCont=rio::import(linkBoston)
+
+#see it
+head(bostonCont)
+summary(bostonCont$Amount)
+tapply(bostonCont$Amount,bostonCont$`Tender Type Description`,summary)
+```
+
+```{r}
+agg_data <- bostonCont |>
+  filter(`Tender Type Description` %in% c("Credit Card", "Check")) |>
+  group_by(Zip = as.character(Zip), `Tender Type Description`) |>
+  summarize(TotalAmount = sum(Amount, na.rm = TRUE)) |>
+  tidyr::spread(key = `Tender Type Description`, value = TotalAmount, fill = 0)
+agg_data
+```
+
+```{r}
+boston_map <- bostonZips |>
+  left_join(agg_data, by = c("ZIP5" = "Zip"))
+```
+
+```{r}
+boston_map_long <- boston_map |>
+  select(ZIP5, geometry, `Credit Card`, Check) |> 
+  pivot_longer(cols = c(`Credit Card`, Check), 
+               names_to = "Tender Type", 
+               values_to = "Contributions")
+
+base <- ggplot() + 
+  geom_sf(data = bostom_map_long, fill = "gray90", color = "white") +
+  theme_minimal()
+
+contrib_map <- ggplot() +
+  geom_sf(data = boston_map_long, 
+          aes(fill = Contributions, geometry = geometry), 
+          color = NA) + 
+  scale_fill_viridis_c(direction = -1, name = "Contributions (USD)") + 
+  facet_wrap(~`Tender Type`, ncol = 2) +
+  labs(
+    title = "Comparison of Contributions by Tender Type",
+    subtitle = "Credit Card vs Check Contributions Across Boston ZIP Codes",
+    fill = "Contributions (USD)\n(White: No Data)",
+    caption = "Data source: Boston Contributions"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.title = element_text(size = 8, hjust = 0.5),
+    legend.position = "bottom", 
+    legend.key.width = unit(1, "cm"),
+    strip.text = element_text(size = 10, face = "bold"),
+    axis.title = element_blank(), 
+    axis.text = element_blank(), 
+    panel.grid = element_blank()
+  ) +
+  guides(
+    fill = guide_colorbar(title.position = "top")
+  )
+contrib_map
+```
+
+```{r}
+ggplot(boston_map_long)+ aes(x=Contributions) + geom_density() + facet_wrap(~`Tender Type`,ncol = 1) + 
+  scale_x_log10(labels = label_number(big.mark = ",", accuracy = 1),
+                breaks = scales::trans_breaks("log10", function(x) 10^x))
+```
+
+```{r}
+customCuts=c(0,10000,31623,100000,316228)
+boston_map_long$Contributions_cat <- cut(
+  boston_map_long$Contributions,
+  breaks = customCuts,
+  include.lowest = TRUE,
+  dig.lab = 5       
+)
+```
+
+```{r}
+theLabelsForLevels <- c("(,10k]", "(10k, 31k]", "(31k, 100k]", "(100k, 316k]")
+
+boston_map_long$Contributions_catLabel <- boston_map_long$Contributions_cat
+levels(boston_map_long$Contributions_catLabel) <- theLabelsForLevels
+
+head(boston_map_long$Contributions_catLabel, 10)
+```
+
+```{r}
+
+
+discrete_plot <- ggplot() +
+  geom_sf(data = boston_map_long, 
+          aes(fill = Contributions_catLabel, geometry = geometry), 
+          color = NA) + 
+  scale_fill_viridis_d(direction = -1, name = "Contributions (USD)", labels = theLabelsForLevels, option = "B") +
+  facet_wrap(~`Tender Type`, ncol = 2) +
+  labs(
+    title = "Discretized Contributions by Tender Type",
+    subtitle = "Credit Card vs Check Contributions Across Boston ZIP Codes",
+    fill = "Contributions (USD)",
+    caption = "Data source: Boston Contributions"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.title = element_text(size = 8, hjust = 0.5),
+    legend.position = "bottom",
+    legend.key.width = unit(1, "cm"), 
+    strip.text = element_text(size = 10, face = "bold"),
+    axis.title = element_blank(), 
+    axis.text = element_blank(), 
+    panel.grid = element_blank()
+  )
+
+discrete_plot
+```
+
+```{r}
+caption_text <- "Data source: www.ocpf.us - Massachusetts Office of Campaign and Political Finance. The visualization above represents the total political contributions by ZIP code and whether the contribution was made via Check or Card, the two tender types with the largest median and mean amounts. Between the two, ZIP codes with the highest degree of contribution which are unshared appear along Boston's West wing for Check contributions and along the East wing for Credit Card contributions. Discretization was performed along powers of 10, with approximate midpoints along the base 10 scale.  
+"
+wrapped_caption <- str_wrap(caption_text, width = 90)
+
+discrete_plot <- ggplot() +
+  geom_sf(data = boston_map_long, 
+          aes(fill = Contributions_catLabel, geometry = geometry), 
+          color = "gray20", size = 0.05) + 
+  scale_fill_viridis_d(
+    direction = -1, 
+    name = "Contributions", 
+    labels = theLabelsForLevels, 
+    option = "B"
+  ) +
+  facet_wrap(~`Tender Type`, ncol = 2) +
+  labs(
+    title = "East vs West Boston Political Contribution by Tender Type",
+    subtitle = "Check and Credit Card Contributions across Boston ZIP Codes",
+    fill = "Contributions (USD)",
+    caption = wrapped_caption
+  ) +
+  theme_minimal() +
+  theme(
+    legend.title = element_text(size = 10, hjust = 0.5),
+    legend.text = element_text(size = 9),
+    legend.position = "bottom",
+    legend.key.width = unit(1, "cm"), 
+    strip.text = element_text(size = 10, face = "bold"),
+    axis.title = element_blank(), 
+    axis.text = element_blank(), 
+    panel.grid = element_blank(),
+    plot.caption = element_text(size = 6)
+  )
+
+print(discrete_plot)
+```
+
+```{r}
+saveRDS(discrete_plot, "boston_contributions.rds")
+```

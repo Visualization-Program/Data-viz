@@ -1,0 +1,7 @@
+"0","```r
+rm(list = ls())
+location='https://github.com/DACSS-Visual/tabular_univar_cat/raw/main/data/'
+file='eduwa.rda'
+link=paste0(location,file)
+load(file=url(link))
+```"

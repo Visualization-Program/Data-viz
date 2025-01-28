@@ -1,0 +1,5 @@
+"0","contribsWA_agg |>"
+"0","  group_by(contributor_zip, election_year) |>"
+"0","  mutate(percentage = counts / sum(counts) * 100) -> contribsWA_agg"
+"0",""
+"0","contribsWA_agg$counts=NULL"

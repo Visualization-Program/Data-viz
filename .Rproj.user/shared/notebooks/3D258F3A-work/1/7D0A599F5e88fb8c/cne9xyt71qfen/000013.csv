@@ -1,0 +1,16 @@
+"0","# see some rows
+head(zipMap)
+"
+"1","Simple feature collection with 6 features and 10 fields"
+"1","
+"
+"1","Geometry type: MULTIPOLYGON
+"
+"1","Dimension:     XY
+"
+"1","Bounding box:  "
+"1","xmin: -122.3449 ymin: 47.25706 xmax: -122.0991 ymax: 47.6608"
+"1","
+"
+"1","Geodetic CRS:  WGS 84
+"

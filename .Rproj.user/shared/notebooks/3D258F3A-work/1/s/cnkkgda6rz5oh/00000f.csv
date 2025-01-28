@@ -1,0 +1,3 @@
+"0","contrib_zipMap=merge(zipMap,contribsWA_agg,"
+"0","                     by.x='ZCTA5CE10',  "
+"0","                     by.y='contributor_zip')"

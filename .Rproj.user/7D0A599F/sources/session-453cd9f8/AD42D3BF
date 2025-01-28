@@ -1,0 +1,32 @@
+{
+    "id": "AD42D3BF",
+    "path": "~/GitHub/Data-viz/work.Rmd",
+    "project_path": "work.Rmd",
+    "type": "r_markdown",
+    "hash": "2669540578",
+    "contents": "",
+    "dirty": false,
+    "created": 1737767947303.0,
+    "source_on_save": false,
+    "relative_order": 3,
+    "properties": {
+        "rmdVisualMode": "true",
+        "rmdVisualWrapConfigured": "true",
+        "chunk_output_type": "inline",
+        "source_window_id": "",
+        "Source": "Source",
+        "docOutlineVisible": "1",
+        "rmdVisualCollapsedChunks": "",
+        "rmdVisualModeLocation": "21449:21812.666015625",
+        "cursorPosition": "763,0",
+        "scrollLine": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1738034375,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1738034375916,
+    "read_only": false,
+    "read_only_alternatives": []
+}

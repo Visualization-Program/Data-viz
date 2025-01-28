@@ -1,0 +1,10 @@
+"0","```r
+ruralEduwa=eduwa[eduwa$LocaleType=='Rural',]
+ruralEduwa$LocaleSub=droplevels(ruralEduwa$LocaleSub)
+
+table(ruralEduwa$LocaleSub)
+```"
+"1","
+ Rural: Fringe Rural: Distant  Rural: Remote 
+           202            163            140 
+"

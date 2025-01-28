@@ -1,0 +1,2 @@
+"0","base=ggplot(data = zipMap) # map to use"
+"0","base + geom_sf(fill='black') # plot the geometry"

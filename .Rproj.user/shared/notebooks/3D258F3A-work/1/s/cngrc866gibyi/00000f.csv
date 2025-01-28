@@ -1,0 +1,7 @@
+"0","base=ggplot() + theme_void() "
+"0","base + geom_sf(data=contrib_zipMap,"
+"0","               aes(fill=amountPerCap)) + "
+"0","       scale_fill_viridis_c(direction = -1,"
+"0","                            na.value = 'red') + # missing in red?"
+"0","       facet_grid(party~election_year) +"
+"0","       labs(fill='Contribution PerCap \n (red:no information)')  "

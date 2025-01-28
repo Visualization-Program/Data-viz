@@ -1,0 +1,2 @@
+"0","do.call(data.frame,aggregate(data=contrib_zipMap,"
+"0","                             amountPerCap~election_year +party,fivenum))"

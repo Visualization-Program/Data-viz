@@ -1,0 +1,2 @@
+"0","zipMap$area_km2=drop_units(set_units(st_area(st_make_valid(zipMap)),'km2'))"
+"0","zipMap$POP2005_density=zipMap$POP2005/zipMap$area_km2"

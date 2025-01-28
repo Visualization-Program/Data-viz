@@ -1,0 +1,7 @@
+"0","customCuts=c(0,10000,31623,100000,316228)"
+"0","boston_map_long$Contributions_cat <- cut("
+"0","  boston_map_long$Contributions,"
+"0","  breaks = customCuts,"
+"0","  include.lowest = TRUE, # Include the lowest value in the first interval"
+"0","  dig.lab = 5           # Ensure labels use enough digits"
+"0",")"

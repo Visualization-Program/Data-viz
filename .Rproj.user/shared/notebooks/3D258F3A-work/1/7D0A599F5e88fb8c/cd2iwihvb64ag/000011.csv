@@ -1,0 +1,4 @@
+"0","base=ggplot(data = zipMap)"
+"0","choroPop=base + geom_sf(aes(fill=POP2005_density),color=NA) + "
+"0","  scale_fill_viridis_c(direction = -1)"
+"0","choroPop"

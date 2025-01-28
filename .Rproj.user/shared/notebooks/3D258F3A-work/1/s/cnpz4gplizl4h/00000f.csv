@@ -1,0 +1,7 @@
+"0","base + geom_sf(data=contrib_zipMap,"
+"0","               aes(fill=amount_perCap_cat),color=NA) + "
+"0","               labs(fill=""US$ PerCapita \nAreas with NO Info in white"","
+"0","                    title='Contributions to Republicans and Democrats: Not much difference',"
+"0","                    subtitle='WA State zip boundaries, contribution in 2012 & 2016')+"
+"0","                    scale_fill_brewer(palette = ""YlOrRd"") +"
+"0","                        facet_grid(party~election_year) "

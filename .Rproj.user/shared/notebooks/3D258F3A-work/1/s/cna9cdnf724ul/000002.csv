@@ -1,0 +1,11 @@
+"0","```r
+prop.table(absoluteT)
+
+```"
+"1","    City: Small   City: Midsize     City: Large   Suburb: Small Suburb: Midsize 
+     0.13597033      0.11372064      0.04449938      0.02348578      0.07375361 
+  Suburb: Large    Town: Fringe   Town: Distant    Town: Remote   Rural: Fringe 
+     0.23156160      0.04079110      0.06427689      0.03419860      0.08323033 
+ Rural: Distant   Rural: Remote         Unknown 
+     0.06716110      0.05768438      0.02966625 
+"
